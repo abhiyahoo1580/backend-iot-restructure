@@ -47,11 +47,12 @@ const client = new OAuth2Client("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");
 // }
 
 async function login(req) {
-    // console.log("login hitt");
+    console.log("Login request received:", req.body.email_id);
     try {
         const user = await loginData.findOne({ $and: [{ email_id: req.body.email_id.toLowerCase(), isDelete: false, verify: true }] }).lean();
 
         if (!user || !user.password) {
+            console.log("User not found or not verified:", req.body.email_id);
             return {
                 msg: 'User does not exist',
                 data: { success: false }
@@ -60,6 +61,7 @@ async function login(req) {
 
         const valid = await bcrypt.compare(req.body.password, user.password);
         if (!valid) {
+            console.log("Invalid password for user:", req.body.email_id);
             return {
                 msg: 'Invalid  password',
                 data: { success: false }
@@ -83,6 +85,7 @@ async function login(req) {
             "defaultDeviceType": user.default_device_type ? user.default_device_type : 1,
             "token": jwt.sign(payload, config.SECRET, { expiresIn: 43200 })
         }
+        console.log("Login successful for user:", user.email_id, "userId:", user._id);
         return {
             msg: 'successfully login',
             data: response

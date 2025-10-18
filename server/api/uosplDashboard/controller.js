@@ -374,7 +374,7 @@ async function getOEMUserDashoard(req) {
 // getOEMUserInformationDashoard
 async function getOEMUserInformationDashoard(req) {
   try {
-    // console.log(req.query)
+    console.log("GET_FULL_USER request for userId:", req.query.userId);
     const user = await userData.aggregate([{
       '$match': {
         _id: ObjectId(req.query.userId),
@@ -400,6 +400,8 @@ async function getOEMUserInformationDashoard(req) {
     },
     {
       $project: {
+        _id: 1,
+        userId: "$_id",
         address: 1,
         company_id: 1,
         company_name: 1,
@@ -412,6 +414,7 @@ async function getOEMUserInformationDashoard(req) {
       }
     },
     ]);
+    console.log("GET_FULL_USER response:", user.length > 0 ? "User found" : "User not found", user.length > 0 ? user[0]._id : null);
     return {
       msg: 'successfully Find',
       data: user.length > 0 ? user[0] : null
