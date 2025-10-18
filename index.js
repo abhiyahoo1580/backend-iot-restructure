@@ -25,6 +25,36 @@ const httpsOptions = {
   // ca: fs.readFileSync(path.resolve(__dirname, './TempSSL/gd_bundle-g2.crt')),
   key: fs.readFileSync(path.resolve(__dirname, "./TempSSL/ssl.key")),
 };
+
+// Basic health and readiness endpoints (no auth required)
+app.get("/healthz", (req, res) => {
+  res.status(200).send({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+  });
+});
+
+app.get("/readyz", (req, res) => {
+  // Database readiness
+  const dbState = database.connection && database.connection.readyState;
+  const dbStates = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+  const dbStatus = dbStates[dbState] || "unknown";
+
+  // MQTT readiness
+  const mqttStatus = mqttClient && mqttClient.connected ? "connected" : "disconnected";
+
+  const allReady = dbStatus === "connected" && mqttStatus === "connected";
+
+  res.status(allReady ? 200 : 503).send({
+    status: allReady ? "ready" : "not-ready",
+    services: {
+      database: dbStatus,
+      mqtt: mqttStatus,
+    },
+    timestamp: Date.now(),
+  });
+});
 const allowedOrigins = [
   "http://testdomain.elliotsystemsonline.com",
   "http://ec2-3-135-178-120.us-east-2.compute.amazonaws.com",
