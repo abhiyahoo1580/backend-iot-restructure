@@ -45,6 +45,7 @@ const allowedOrigins = [
   /^https:\/\/elliot-iiot-frontend-admin-[a-z0-9]+-mahendra-jadamals-projects\.vercel\.app$/,
   "https://elliot-iiot-frontend-admin.onrender.com",
   "https://elliot-iiot-frontend-user.onrender.com",
+  "https://elliot-iiot-frontend-user-vrfg.onrender.com",
 ];
 
 app.use(bodyParser.json());
@@ -88,6 +89,7 @@ const io = socketIo(httpsServer, {
       "http://localhost:3000",
       "http://uo.elliotsystemsonline.com",
       "https://uo.elliotsystemsonline.com",
+      "https://elliot-iiot-frontend-user-vrfg.onrender.com",
     ],
     methods: ["GET", "POST"],
     credentials: true,
