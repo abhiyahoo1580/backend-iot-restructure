@@ -38,11 +38,17 @@ app.get("/healthz", (req, res) => {
 app.get("/readyz", (req, res) => {
   // Database readiness
   const dbState = database.connection && database.connection.readyState;
-  const dbStates = { 0: "disconnected", 1: "connected", 2: "connecting", 3: "disconnecting" };
+  const dbStates = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
   const dbStatus = dbStates[dbState] || "unknown";
 
   // MQTT readiness
-  const mqttStatus = mqttClient && mqttClient.connected ? "connected" : "disconnected";
+  const mqttStatus =
+    mqttClient && mqttClient.connected ? "connected" : "disconnected";
 
   const allReady = dbStatus === "connected" && mqttStatus === "connected";
 
