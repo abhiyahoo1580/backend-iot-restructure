@@ -1,10 +1,10 @@
-const loginData = require('./model');
-const registerUserData = require('./model')
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const config = require('../../../config')
-const jwt = require('jsonwebtoken');
-const { response } = require('express');
+const loginData = require("./model");
+const registerUserData = require("./model");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const config = require("../../../config");
+const jwt = require("jsonwebtoken");
+const { response } = require("express");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client("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");
 
@@ -47,129 +47,164 @@ const client = new OAuth2Client("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");
 // }
 
 async function login(req) {
-    console.log("Login request received for:", req.body.email_id);
-    console.log("Database:", mongoose.connection.db.databaseName);
-    try {
-        // First, check if user exists at all (without verify check)
-        const userCheck = await loginData.findOne({ email_id: req.body.email_id.toLowerCase() }).lean();
-        console.log("User lookup result:", userCheck ? {
+  console.log("Login request received for:", req.body.email_id);
+  console.log("Database:", mongoose.connection.db.databaseName);
+  try {
+    // First, check if user exists at all (without verify check)
+    const userCheck = await loginData
+      .findOne({ email_id: req.body.email_id.toLowerCase() })
+      .lean();
+    console.log(
+      "User lookup result:",
+      userCheck
+        ? {
             exists: true,
             email: userCheck.email_id,
             isDelete: userCheck.isDelete,
             verify: userCheck.verify,
-            hasPassword: !!userCheck.password
-        } : "User not found in database");
+            hasPassword: !!userCheck.password,
+          }
+        : "User not found in database"
+    );
 
-        const user = await loginData.findOne({ $and: [{ email_id: req.body.email_id.toLowerCase(), isDelete: false, verify: true }] }).lean();
+    const user = await loginData
+      .findOne({
+        $and: [
+          {
+            email_id: req.body.email_id.toLowerCase(),
+            isDelete: false,
+            verify: true,
+          },
+        ],
+      })
+      .lean();
 
-        if (!user || !user.password) {
-            console.log("Login failed - User not found or not verified:", req.body.email_id);
-            return {
-                msg: 'User does not exist',
-                data: { success: false }
-            }
-        }
-
-        const valid = await bcrypt.compare(req.body.password, user.password);
-        if (!valid) {
-            console.log("Invalid password for user:", req.body.email_id);
-            return {
-                msg: 'Invalid  password',
-                data: { success: false }
-            }
-        }
-
-        console.log("Login successful for user:", user.email_id, "userId:", user._id);
-        const company = await mongoose.models.companie.findOne({ CompanyId: user.company_id }).lean();
-        const payload = {
-            emailId: user.email_id,
-            userId: user._id,
-            companyId: user.company_id
-        }
-        let response = {
-            "success": true,
-            "firstName": user.first_name,
-            "userId": user._id,
-            "companyId": user.company_id,
-            "companyName": company ? company.CompanyName : undefined,
-            "companyAddress": company ? company.CompanyAddress : undefined,
-            "lastName": user.last_name,
-            "administrator": user.administrator,
-            "defaultDeviceType": user.default_device_type ? user.default_device_type : 1,
-            "token": jwt.sign(payload, config.SECRET, { expiresIn: 43200 })
-        }
-        return {
-            msg: 'successfully login',
-            data: response
-        }
-    } catch (error) {
-        console.log("error in login", error);
-        return Promise.reject('error occured in login ');
+    if (!user || !user.password) {
+      console.log(
+        "Login failed - User not found or not verified:",
+        req.body.email_id
+      );
+      return {
+        msg: "User does not exist",
+        data: { success: false },
+      };
     }
+
+    const valid = await bcrypt.compare(req.body.password, user.password);
+    if (!valid) {
+      console.log("Invalid password for user:", req.body.email_id);
+      return {
+        msg: "Invalid  password",
+        data: { success: false },
+      };
+    }
+
+    console.log(
+      "Login successful for user:",
+      user.email_id,
+      "userId:",
+      user._id
+    );
+    const company = await mongoose.models.companie
+      .findOne({ CompanyId: user.company_id })
+      .lean();
+    const payload = {
+      emailId: user.email_id,
+      userId: user._id,
+      companyId: user.company_id,
+    };
+    let response = {
+      success: true,
+      firstName: user.first_name,
+      userId: user._id,
+      companyId: user.company_id,
+      companyName: company ? company.CompanyName : undefined,
+      companyAddress: company ? company.CompanyAddress : undefined,
+      lastName: user.last_name,
+      administrator: user.administrator,
+      defaultDeviceType: user.default_device_type
+        ? user.default_device_type
+        : 1,
+      token: jwt.sign(payload, config.SECRET, { expiresIn: 43200 }),
+    };
+    return {
+      msg: "successfully login",
+      data: response,
+    };
+  } catch (error) {
+    console.log("error in login", error);
+    return Promise.reject("error occured in login ");
+  }
 }
 
 // postOAuth
 async function postOAuth(req) {
-    // console.log("login hitt");
-    try {
-
-        let key =  req.body.clientId
-        const token = req.body.credential; // Get from frontend after login
-        // const decoded = jwt.decode(token);
-            // Verify the token
+  // console.log("login hitt");
+  try {
+    let key = req.body.clientId;
+    const token = req.body.credential; // Get from frontend after login
+    // const decoded = jwt.decode(token);
+    // Verify the token
     const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: key, // Make sure it matches your client ID
-      });
-  
-      // Extract user details
-      const decoded = ticket.getPayload();
+      idToken: token,
+      audience: key, // Make sure it matches your client ID
+    });
+
+    // Extract user details
+    const decoded = ticket.getPayload();
     //   console.log("User Info:", decoded);
 
+    // console.log(decoded)
+    const user = await loginData
+      .findOne({
+        $and: [{ email_id: decoded.email, isDelete: false, verify: true }],
+      })
+      .lean();
 
-        // console.log(decoded)
-        const user = await loginData.findOne({ $and: [{ email_id: decoded.email , isDelete: false, verify: true }] }).lean();
-
-        if (!user) {
-            return {
-                msg: 'User does not exist',
-                data: { success: false }
-            }
-        }
-        if (!decoded.email_verified) {
-            return {
-                msg: 'Email not verified',
-                data: { success: false }
-            }
-        }
-
-        const company = await mongoose.models.companie.findOne({ CompanyId: user.company_id }).lean();
-        const payload = {
-            emailId: user.email_id,
-            companyId: user.company_id
-        }
-        let response = {
-            "success": true,
-            "firstName": user.first_name,
-            "userId": user._id,
-            "companyId": user.company_id,
-            "companyName": company ? company.CompanyName : undefined,
-            "companyAddress": company ? company.CompanyAddress : undefined,
-            "lastName": user.last_name,
-            "administrator": user.administrator,
-            "defaultDeviceType" : user.default_device_type ? user.default_device_type : 1,
-            "token": jwt.sign(payload, config.SECRET, { expiresIn: 43200 })
-        }
-        return {
-            msg: 'successfully login',
-            data: response
-        }
-
-        // }
-    } catch (error) {
-        // console.log("error in login", error);
-        return Promise.reject('error occured in login ');
+    if (!user) {
+      return {
+        msg: "User does not exist",
+        data: { success: false },
+      };
     }
+    if (!decoded.email_verified) {
+      return {
+        msg: "Email not verified",
+        data: { success: false },
+      };
+    }
+
+    const company = await mongoose.models.companie
+      .findOne({ CompanyId: user.company_id })
+      .lean();
+    const payload = {
+      emailId: user.email_id,
+      companyId: user.company_id,
+    };
+    let response = {
+      success: true,
+      firstName: user.first_name,
+      userId: user._id,
+      companyId: user.company_id,
+      companyName: company ? company.CompanyName : undefined,
+      companyAddress: company ? company.CompanyAddress : undefined,
+      lastName: user.last_name,
+      administrator: user.administrator,
+      defaultDeviceType: user.default_device_type
+        ? user.default_device_type
+        : 1,
+      token: jwt.sign(payload, config.SECRET, { expiresIn: 43200 }),
+    };
+    return {
+      msg: "successfully login",
+      data: response,
+    };
+
+    // }
+  } catch (error) {
+    // console.log("error in login", error);
+    return Promise.reject("error occured in login ");
+  }
 }
 
 // async function insertUser(req){
@@ -209,7 +244,6 @@ async function postOAuth(req) {
 //     }
 // }
 
-
 // async function updateUser(req){
 //     // console.log('updateUser hitt');
 //     try{
@@ -232,11 +266,10 @@ async function postOAuth(req) {
 //     }
 // }
 
-
 module.exports = {
-    login,
-    postOAuth
-    // insertUser,
-    // getUser,
-    // updateUser
-}
+  login,
+  postOAuth,
+  // insertUser,
+  // getUser,
+  // updateUser
+};
