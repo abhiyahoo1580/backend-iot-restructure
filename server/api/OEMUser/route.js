@@ -27,7 +27,15 @@ function get(req,res) {
         res.status(500).send({msg:'error occured'});
     })
 }
-
+// identify
+function identify(req,res) {
+    controller.getOEMidentify(req).then((response) => {
+        res.status(200).send(response);
+    }).catch((error) =>{
+        console.log(error);
+        res.status(500).send({msg:'error occured'});
+    })
+}
 // getUserByCompanyId
 function getUserByCompanyId(req,res) {
     controller.getUserByCompanyId(req).then((response) => {
@@ -210,5 +218,7 @@ router.get('/verify-setup-token',verifyPasswordSetupToken);
 router.post('/set-password',setPasswordWithToken);
 router.post('/send-setup-link',sendPasswordSetupLink);
 
+// identify
+router.get('/me',identify);
 
 module.exports=router

@@ -158,7 +158,7 @@ router.use('/UOSPL/welding', uosplWeldingReport.router);
 
 /* OEM user api */
 const oemUser= require('./OEMUser')
-router.use('/OEM/user', oemUser.router);
+router.use('/OEM/user',tokenVerification, oemUser.router);
 
 /* OEM comany api */
 const oemCompany= require('./OEMCompany')
@@ -170,7 +170,7 @@ router.use('/OEM/assetType/map', oEMAssetTypeMapping.router);
 
 /* lcd parameter api */
 const oEMLiveParameter= require('./OEMLiveParameter')
-router.use('/OEM/Lcd', oEMLiveParameter.router);
+router.use('/OEM/Lcd', tokenVerification, oEMLiveParameter.router);
 
 /* lcd parameter api */
 const oEMGateway= require('./OEMGateway')

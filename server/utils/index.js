@@ -7,7 +7,7 @@ module.exports={
     StopGatewayAlertsScheduler:require('./stopGatewayScheduler'),
     uoStopMeter:require('./uoStopMeter'),
     dgReport:require('./dgMorningReportLAndL'),
-    // scheduler : require('./oeeScheduler'),
+    scheduler : require('./oeeScheduler'),
     oeeReportScheduler : require('./oeeReportScheduler'),
     morningDifferenceReportMonth : require('./morningDifferenceReportMonth'),
     // uoStopMeter : require('./uoStopMeter')

@@ -4,25 +4,12 @@ const JWT = require('jsonwebtoken');
 
 async function getCompanyDetail(req){
     try{
-        // Get company ID from authenticated user (set by tokenVerification middleware)
-        // Also support direct token access for backward compatibility
-        let companyId;
-        
-        if (req.user && req.user.companyId) {
-            // From tokenVerification middleware (preferred)
-            companyId = req.user.companyId;
-        } else if (req.headers.authorization) {
-            // Fallback: decode from Authorization header
-            let token = req.headers.authorization.split(" ")[1];
-            var decoded = JWT.decode(token);
-            companyId = decoded.companyId;
-        } else {
-            throw new Error('No authentication found');
-        }
 
+        let token = req.headers.authorization.split(" ")[1];
+        var decoded = JWT.decode(token);
         const getCompanyDetailted =await companyData.aggregate([
             {$match : {
-                CompanyId : companyId
+                CompanyId : decoded.companyId
             }
         },
         {

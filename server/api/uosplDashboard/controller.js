@@ -1,82 +1,90 @@
-const mongoose = require("mongoose");
-const alertsData = require("../uosplAlert/model");
-const deviceData = require("../uosplDevice/model");
-const userData = require("../uosplUser/model");
-const lcdData = require("../lcdConfig/model");
-const gatewayData = require("../OEMGateway/model");
-const companyData = require("../OEMCompany/model");
-const { ObjectId } = require("mongodb");
-const historicalData = require("../historical/model");
-const _ = require("lodash");
+const mongoose = require('mongoose');
+const alertsData = require('../uosplAlert/model');
+const deviceData = require('../uosplDevice/model')
+const userData = require('../uosplUser/model')
+const lcdData = require('../lcdConfig/model')
+const gatewayData = require('../OEMGateway/model')
+const companyData = require('../OEMCompany/model')
+const { ObjectId } = require('mongodb');
+const historicalData = require('../historical/model')
+const _ = require('lodash');
 
 async function getAdminDashoard(req) {
   try {
+
     const AllAlertsCount = await alertsData.aggregate([
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllUserCount = await userData.aggregate([
       {
         $match: {
-          company_id: Number(req.query.companyId),
-        },
+          company_id: Number(req.query.companyId)
+        }
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllDeviceCount = await deviceData.aggregate([
       {
         $match: {
-          CompanyId: Number(req.query.companyId),
-        },
+          CompanyId: Number(req.query.companyId)
+        }
       },
       {
         $facet: {
           totalDevice: [{ $count: "count" }],
-          threeDaysOfflineDevice: [
-            { $match: { status: false } },
-            { $count: "count" },
+          threeDaysOfflineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          onlineDevice: [
+            { $match: { status: true } },
+            { $count: "count" }
           ],
-          onlineDevice: [{ $match: { status: true } }, { $count: "count" }],
-          offlineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          offlineDevice: [
+            { $match: { status: false } },
+            { $count: "count" }
+          ],
           unmappedDevice: [
             { $match: { MapCustomer: null } },
-            { $count: "count" },
+            { $count: "count" }
           ],
           mappedDevice: [
             { $match: { MapCustomer: { $ne: null } } },
-            { $count: "count" },
-          ],
-        },
-      },
-    ]);
+            { $count: "count" }
+          ]
+        }
+      }
+
+    ])
+
 
     const adminDashboard = {
       toatlAlert: AllAlertsCount[0]?.Count || 0,
       toatlUser: AllUserCount[0]?.Count || 0,
       totalDevice: AllDeviceCount[0]?.totalDevice[0]?.count || 0,
-      threeDaysOfflineDevice:
-        AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
+      threeDaysOfflineDevice: AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
       mappedDevice: AllDeviceCount[0]?.mappedDevice[0]?.count || 0,
       offlineDevice: AllDeviceCount[0]?.offlineDevice[0]?.count || 0,
       onlineDevice: AllDeviceCount[0]?.onlineDevice[0]?.count || 0,
       unmappedDevice: AllDeviceCount[0]?.unmappedDevice[0]?.count || 0,
+
     };
     return {
-      msg: "successfully Find",
-      data: adminDashboard,
-    };
+      msg: 'successfully Find',
+      data: adminDashboard
+    }
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getOEMAdminDashoard
 async function getOEMAdminDashoard(req) {
   try {
-    // const AllAlertsCount = await alertsData.aggregate([
+
+    // const AllAlertsCount = await alertsData.aggregate([ 
     //     {
     //         $count: "Count"
     //       },
@@ -84,166 +92,179 @@ async function getOEMAdminDashoard(req) {
     const AllGatewayCount = await gatewayData.aggregate([
       {
         $match: {
-          companyId: Number(req.query.companyId),
-        },
+          companyId: Number(req.query.companyId)
+        }
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllCompanyCount = await companyData.aggregate([
       {
         $match: {
           companyId: Number(req.query.companyId),
           isOEM: false,
-          isDelete: false,
-        },
+          isDelete: false
+        }
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllUserCount = await userData.aggregate([
       {
         $match: {
           company_id: Number(req.query.companyId),
           isDelete: false,
-          administrator: false,
-        },
+          administrator: false
+        }
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllDeviceCount = await deviceData.aggregate([
       {
         $match: {
-          CompanyId: Number(req.query.companyId),
-        },
+          CompanyId: Number(req.query.companyId)
+        }
       },
       {
         $facet: {
           totalDevice: [{ $count: "count" }],
-          threeDaysOfflineDevice: [
-            { $match: { status: false } },
-            { $count: "count" },
+          threeDaysOfflineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          onlineDevice: [
+            { $match: { status: true } },
+            { $count: "count" }
           ],
-          onlineDevice: [{ $match: { status: true } }, { $count: "count" }],
-          offlineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          offlineDevice: [
+            { $match: { status: false } },
+            { $count: "count" }
+          ],
           unmappedDevice: [
             { $match: { MapCustomer: null } },
-            { $count: "count" },
+            { $count: "count" }
           ],
           mappedDevice: [
             { $match: { MapCustomer: { $ne: null } } },
-            { $count: "count" },
-          ],
-        },
-      },
-    ]);
+            { $count: "count" }
+          ]
+        }
+      }
+
+    ])
+
 
     const adminDashboard = {
       toatlAlert: 0,
       toatlUser: AllUserCount[0]?.Count || 0,
       totalDevice: AllDeviceCount[0]?.totalDevice[0]?.count || 0,
-      threeDaysOfflineDevice:
-        AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
+      threeDaysOfflineDevice: AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
       mappedDevice: AllDeviceCount[0]?.mappedDevice[0]?.count || 0,
       offlineDevice: AllDeviceCount[0]?.offlineDevice[0]?.count || 0,
       onlineDevice: AllDeviceCount[0]?.onlineDevice[0]?.count || 0,
       unmappedDevice: AllDeviceCount[0]?.unmappedDevice[0]?.count || 0,
       toatlCompany: AllCompanyCount[0]?.Count || 0,
-      toatlGateway: AllGatewayCount[0]?.Count || 0,
+      toatlGateway: AllGatewayCount[0]?.Count || 0
+
     };
     return {
-      msg: "successfully Find",
-      data: adminDashboard,
-    };
+      msg: 'successfully Find',
+      data: adminDashboard
+    }
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getOEMAdminReNewDashoard
 async function getOEMAdminReNewDashoard(req) {
   try {
-    fDate = new Date().setHours(0, 0, 0, 0);
+    fDate = new Date().setHours(0, 0, 0, 0)
     const AllDeviceCount = await deviceData.aggregate([
       {
         $match: {
           CompanyId: Number(req.query.companyId),
-          reNewDate: { $gte: fDate },
-        },
+          reNewDate: { '$gte': fDate },
+        }
       },
       { $sort: { reNewDate: 1 } },
       { $limit: 10 },
       {
-        $lookup: {
-          from: "users",
-          localField: "MapCustomer",
-          foreignField: "_id",
-          as: "userinfo",
-        },
+        '$lookup': {
+          'from': 'users',
+          'localField': 'MapCustomer',
+          'foreignField': '_id',
+          'as': 'userinfo'
+        }
       },
       {
-        $project: {
-          _id: 0,
-          AssetName: 1,
-          InstallationDate: 1,
-          reNewDate: 1,
-        },
+        '$project': {
+          '_id': 0,
+          'AssetName': 1,
+          'InstallationDate': 1,
+          'reNewDate': 1,
+
+        }
       },
-    ]);
+
+    ])
 
     // console.log(AllDeviceCount)
     return {
-      msg: "successfully Find",
-      data: AllDeviceCount,
-    };
+      msg: 'successfully Find',
+      data: AllDeviceCount
+    }
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getuserDashoard
 async function getuserDashoard(req) {
   try {
+
     const AllAlertsCount = await deviceData.aggregate([
       {
         $match: {
-          MapCustomer: ObjectId(req.query.userId),
-        },
+          MapCustomer: ObjectId(req.query.userId)
+        }
       },
       {
         $lookup: {
           from: "alertsMaa",
           localField: "AssetId",
           foreignField: "AssetId",
-          as: "alerts",
-        },
+          as: "alerts"
+        }
       },
       {
-        $unwind: "$alerts",
+        $unwind: "$alerts"
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
     const AllDeviceCount = await deviceData.aggregate([
       {
         $match: {
-          MapCustomer: ObjectId(req.query.userId),
-        },
+          MapCustomer: ObjectId(req.query.userId)
+        }
       },
       {
         $facet: {
           totalDevice: [{ $count: "count" }],
-          threeDaysOfflineDevice: [
-            { $match: { status: false } },
-            { $count: "count" },
+          threeDaysOfflineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          onlineDevice: [
+            { $match: { status: true } },
+            { $count: "count" }
           ],
-          onlineDevice: [{ $match: { status: true } }, { $count: "count" }],
-          offlineDevice: [{ $match: { status: false } }, { $count: "count" }],
+          offlineDevice: [
+            { $match: { status: false } },
+            { $count: "count" }
+          ],
           // unmappedDevice : [
           //   { $match: { MapCustomer: null } },
           //   { $count: "count" }
@@ -252,65 +273,65 @@ async function getuserDashoard(req) {
           //   { $match: { MapCustomer: { $ne: null } } },
           //   { $count: "count" }
           // ]
-        },
-      },
-    ]);
+        }
+      }
+
+    ])
+
 
     const adminDashboard = {
       toatlAlert: AllAlertsCount[0]?.Count || 0,
       totalDevice: AllDeviceCount[0]?.totalDevice[0]?.count || 0,
-      threeDaysOfflineDevice:
-        AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
+      threeDaysOfflineDevice: AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
       offlineDevice: AllDeviceCount[0]?.offlineDevice[0]?.count || 0,
       onlineDevice: AllDeviceCount[0]?.onlineDevice[0]?.count || 0,
     };
     return {
-      msg: "successfully Find",
-      data: adminDashboard,
-    };
+      msg: 'successfully Find',
+      data: adminDashboard
+    }
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getOEMUserDashoard
 async function getOEMUserDashoard(req) {
   try {
+
     const AllAlertsCount = await deviceData.aggregate([
       {
         $match: {
-          MapCustomer: ObjectId(req.query.userId),
-        },
+          MapCustomer: ObjectId(req.query.userId)
+        }
       },
       {
         $lookup: {
           from: "oemAlerts",
           localField: "AssetId",
           foreignField: "assetId",
-          as: "alerts",
-        },
+          as: "alerts"
+        }
       },
       {
-        $unwind: "$alerts",
+        $unwind: "$alerts"
       },
       {
-        $count: "Count",
+        $count: "Count"
       },
-    ]);
+    ])
 
     const AllDeviceCount = await deviceData.aggregate([
       {
         $match: {
-          MapCustomer: ObjectId(req.query.userId),
-        },
+          MapCustomer: ObjectId(req.query.userId)
+        }
       },
       {
         $facet: {
           totalDevice: [{ $count: "count" }],
-          threeDaysOfflineDevice: [
-            { $match: { status: false } },
-            { $count: "count" },
-          ],
+          threeDaysOfflineDevice: [{ $match: { status: false } }, { $count: "count" }],
           // onlineDevice : [
           //   { $match: { status: true } },
           //   { $count: "count" }
@@ -327,103 +348,99 @@ async function getOEMUserDashoard(req) {
           //   { $match: { MapCustomer: { $ne: null } } },
           //   { $count: "count" }
           // ]
-        },
-      },
-    ]);
+        }
+      }
+
+    ])
+
 
     const adminDashboard = {
       toatlAlert: AllAlertsCount[0]?.Count || 0,
       totalDevice: AllDeviceCount[0]?.totalDevice[0]?.count || 0,
-      threeDaysOfflineDevice:
-        AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
+      threeDaysOfflineDevice: AllDeviceCount[0]?.threeDaysOfflineDevice[0]?.count || 0,
       // offlineDevice: AllDeviceCount[0]?.offlineDevice[0]?.count || 0,
       // onlineDevice: AllDeviceCount[0]?.onlineDevice[0]?.count || 0,
     };
     return {
-      msg: "successfully Find",
-      data: adminDashboard,
-    };
+      msg: 'successfully Find',
+      data: adminDashboard
+    }
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getOEMUserInformationDashoard
 async function getOEMUserInformationDashoard(req) {
   try {
-    console.log("GET_FULL_USER request for userId:", req.query.userId);
-    const user = await userData.aggregate([
-      {
-        $match: {
-          _id: ObjectId(req.query.userId),
-          isDelete: false,
-          administrator: false,
-        },
+    // console.log(req.query)
+    const user = await userData.aggregate([{
+      '$match': {
+        _id: ObjectId(req.query.userId),
+        "isDelete": false,
+        "administrator": false
       },
-      {
-        $lookup: {
-          from: "lcdcofigs",
-          localField: "_id",
-          foreignField: "userId",
-          as: "lcdParameter",
-        },
-      },
-      {
-        $lookup: {
-          from: "parameters",
-          localField: "lcdParameter.ParameterId",
-          foreignField: "_id",
-          as: "Parameter",
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          userId: "$_id",
-          address: 1,
-          company_id: 1,
-          company_name: 1,
-          first_name: 1,
-          last_name: 1,
-          Parameter: 1,
-          registeredOn: 1,
-          email_id: 1,
-        },
-      },
+    },
+    {
+      $lookup: {
+        from: "lcdcofigs",
+        localField: "_id",
+        foreignField: "userId",
+        as: "lcdParameter"
+      }
+    },
+    {
+      $lookup: {
+        from: "parameters",
+        localField: "lcdParameter.ParameterId",
+        foreignField: "_id",
+        as: "Parameter"
+      }
+    },
+    {
+      $project: {
+        address: 1,
+        company_id: 1,
+        company_name: 1,
+        first_name: 1,
+        last_name: 1,
+        Parameter: 1,
+        registeredOn: 1,
+        email_id: 1
+
+      }
+    },
     ]);
-    console.log(
-      "GET_FULL_USER response:",
-      user.length > 0 ? "User found" : "User not found",
-      user.length > 0 ? user[0]._id : null
-    );
     return {
-      msg: "successfully Find",
-      data: user.length > 0 ? user[0] : null,
-    };
+      msg: 'successfully Find',
+      data: user.length > 0 ? user[0] : null
+    }
     // console.log(user)
   } catch (error) {
-    return Promise.reject("error occure in get lcd Config");
+
+    return Promise.reject('error occure in get lcd Config')
   }
 }
 
 // getOEMLcdDashoard
 async function getOEMLcdDashoard(req) {
   try {
-    // console.log(req.params.id)
-    asset = await deviceData.aggregate([
-      {
-        $match: {
-          MapCustomer: ObjectId(req.params.id),
-        },
-      },
-      { $limit: 1 },
+    // console.log(req.params.id) 
+    asset = await deviceData.aggregate([{
+      $match: {
+        MapCustomer: ObjectId(req.params.id)
+      }
+    },
+    { $limit: 1 },
       // { $replaceRoot: { newRoot: "$$ROOT" } }
-    ]);
+    ])
     time = new Date(Number(req.query.date)).toLocaleString("en-US", {
       timeZone: asset.length > 0 ? asset[0].timeZone : "Asia/Kolkata",
       dateStyle: "medium",
-      timeStyle: "long",
-    });
+      timeStyle: "long"
+
+    })
     fromTime = time.split(" ");
     fromTime.splice(3, 2, "00:00:00", "AM");
     timefrom = fromTime.join(" ");
@@ -436,15 +453,15 @@ async function getOEMLcdDashoard(req) {
     const AllDeviceLCDView = await deviceData.aggregate([
       {
         $match: {
-          MapCustomer: ObjectId(req.params.id),
-        },
+          MapCustomer: ObjectId(req.params.id)
+        }
       },
       {
         $lookup: {
           from: "oemParametrConfigs",
           let: {
             mid: "$MapCustomer",
-            lid: "$AssetId",
+            lid: "$AssetId"
           },
           pipeline: [
             {
@@ -452,14 +469,14 @@ async function getOEMLcdDashoard(req) {
                 $expr: {
                   $and: [
                     { $eq: ["$userId", "$$mid"] },
-                    { $eq: ["$assetId", "$$lid"] },
-                  ],
-                },
-              },
+                    { $eq: ["$assetId", "$$lid"] }
+                  ]
+                }
+              }
             },
           ],
-          as: "liveParameter",
-        },
+          as: "liveParameter"
+        }
       },
       // // //  {
       // // //     $lookup: {
@@ -484,7 +501,8 @@ async function getOEMLcdDashoard(req) {
       // // //     }
       // // //   },
       {
-        $lookup: {
+        $lookup:
+        {
           from: "historicalMeterValues" + Number(req.query.companyId),
           let: { assetId: "$AssetId" },
           pipeline: [
@@ -494,25 +512,23 @@ async function getOEMLcdDashoard(req) {
                   $and: [
                     { $eq: ["$AssetId", "$$assetId"] },
                     { $gte: ["$Date", fDate] },
-                    { $lte: ["$Date", tDate] },
-                  ],
-                },
-              },
+                    { $lte: ["$Date", tDate] }
+                  ]
+                }
+              }
             },
           ],
-          as: "historicalData",
-        },
+          as: "historicalData"
+        }
       },
+      { $unwind: { path: "$historicalData", preserveNullAndEmptyArrays: true } },
       {
-        $unwind: { path: "$historicalData", preserveNullAndEmptyArrays: true },
-      },
-      {
-        $lookup: {
-          from: "allRegisters",
-          localField: "historicalData.Data._id",
-          foreignField: "RegisterId",
-          as: "registerData",
-        },
+        '$lookup': {
+          'from': 'allRegisters',
+          'localField': 'historicalData.Data._id',
+          'foreignField': 'RegisterId',
+          'as': 'registerData'
+        }
       },
       {
         $addFields: {
@@ -520,10 +536,10 @@ async function getOEMLcdDashoard(req) {
             $map: {
               input: "$liveParameter",
               as: "lp",
-              in: "$$lp.parameterId",
-            },
-          },
-        },
+              in: "$$lp.parameterId"
+            }
+          }
+        }
       },
       {
         $project: {
@@ -554,16 +570,16 @@ async function getOEMLcdDashoard(req) {
                             cond: {
                               $and: [
                                 { $eq: ["$$reg.RegisterId", "$$hd._id"] },
-                                { $in: ["$$reg.Parameter", "$liveParamIds"] },
-                              ],
-                            },
-                          },
-                        },
+                                { $in: ["$$reg.Parameter", "$liveParamIds"] }
+                              ]
+                            }
+                          }
+                        }
                       },
-                      0,
-                    ],
-                  },
-                },
+                      0
+                    ]
+                  }
+                }
               },
               as: "entry",
               in: {
@@ -577,54 +593,54 @@ async function getOEMLcdDashoard(req) {
                         $filter: {
                           input: "$registerData",
                           as: "reg",
-                          cond: { $eq: ["$$reg.RegisterId", "$$entry._id"] },
-                        },
+                          cond: { $eq: ["$$reg.RegisterId", "$$entry._id"] }
+                        }
                       },
                       as: "matchedReg",
-                      in: "$$matchedReg.Parameter",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+                      in: "$$matchedReg.Parameter"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       {
-        $lookup: {
-          from: "parameters",
-          localField: "liveParameter.parameterId",
-          foreignField: "_id",
-          as: "ParamneterData",
-        },
+        '$lookup': {
+          'from': 'parameters',
+          'localField': 'liveParameter.parameterId',
+          'foreignField': '_id',
+          'as': 'ParamneterData'
+        }
       },
       {
-        $lookup: {
-          from: "oemAlertsConfig",
-          localField: "AssetId",
-          foreignField: "assetId",
-          as: "AlertsData",
-        },
+        '$lookup': {
+          'from': 'oemAlertsConfig',
+          'localField': 'AssetId',
+          'foreignField': 'assetId',
+          'as': 'AlertsData'
+        }
       },
       {
-        $lookup: {
-          from: "oemParameterSequenceConfig",
-          localField: "AssetId",
-          foreignField: "assetId",
-          as: "ParameterSequenceData",
-        },
+        '$lookup': {
+          'from': 'oemParameterSequenceConfig',
+          'localField': 'AssetId',
+          'foreignField': 'assetId',
+          'as': 'ParameterSequenceData'
+        }
       },
       {
         $project: {
           liveParameter: 0,
-        },
+        }
       },
-      {
+        {
         $lookup: {
           from: "oemAlerts",
           let: {
             // mid: "$MapCustomer",
-            lid: "$AssetId",
+            lid: "$AssetId"
           },
           pipeline: [
             {
@@ -632,18 +648,18 @@ async function getOEMLcdDashoard(req) {
                 $expr: {
                   $and: [
                     // { $eq: ["$userId", "$$mid"] },
-                    { $eq: ["$assetId", "$$lid"] },
-                  ],
-                },
-              },
+                    { $eq: ["$assetId", "$$lid"] }
+                  ]
+                }
+              }
             },
             { $sort: { time: -1 } },
-            { $limit: 1 },
+            { $limit: 1 }
           ],
-          as: "latestAlert",
-        },
-      },
-    ]);
+          as: "latestAlert"
+        }
+      }
+    ])
     // console.log(AllDeviceLCDView)
 
     const transformedData = _.map(AllDeviceLCDView, (item) => {
@@ -671,10 +687,10 @@ async function getOEMLcdDashoard(req) {
           UpperThresholdWarning: alert ? alert.upperThresholdWarning : null,
           lastActValue: lastHist
             ? {
-                ActValue: _.last(lastHist.ActValue),
-                ValueReceivedDate: _.last(lastHist.ValueReceivedDate),
-              }
-            : {},
+              ActValue: _.last(lastHist.ActValue),
+              ValueReceivedDate: _.last(lastHist.ValueReceivedDate),
+            }
+            : {}
         };
       });
 
@@ -689,20 +705,20 @@ async function getOEMLcdDashoard(req) {
         AssetTypeId: item.AssetTypeId,
         latestAlert: item.latestAlert.length > 0 ? item.latestAlert[0] : null,
         // filteredHistWithParam: item.filteredHistWithParam,
-        ParameterData: _.sortBy(paramMap, "sequence"),
+        ParameterData: _.sortBy(paramMap, 'sequence')
       };
     });
     // console.log(transformedData)
-    // const array1 =
+    // const array1 = 
     return {
-      msg: "successfully Find",
-      data: transformedData,
-    };
+      msg: 'successfully Find',
+      data: transformedData
+    }
     // const user = await userData.aggregate([  {
     //     '$match': {
     //         _id : ObjectId(req.query.userId),
     //         "isDelete" : false,
-    //         "administrator" : false
+    //         "administrator" : false               
     //     },
     // },
     //    {
@@ -734,17 +750,18 @@ async function getOEMLcdDashoard(req) {
 
     //                 }
     //   },
-    // ]);
+    // ]);  
     //      return {
     //     msg: 'successfully Find',
     //     data: user.length > 0 ? user[0] : null
     // }
     // console.log(user)
   } catch (error) {
-    console.log("error occure in get lcd Config", error);
-    return Promise.reject("error occure in get lcd Config", error);
+    console.log('error occure in get lcd Config', error)
+    return Promise.reject('error occure in get lcd Config', error)
   }
 }
+
 
 module.exports = {
   getAdminDashoard,
@@ -753,5 +770,7 @@ module.exports = {
   getOEMAdminReNewDashoard,
   getOEMUserInformationDashoard,
   getOEMUserDashoard,
-  getOEMLcdDashoard,
-};
+  getOEMLcdDashoard
+}
+
+
