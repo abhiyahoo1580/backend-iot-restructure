@@ -82,6 +82,9 @@ app.use(
 );
 
 app.use("/", apiRouter);
+app.get("/health", (req, res) => {
+  res.status(200).send("Backend is healthy and running");
+});
 
 const httpsServer = https.createServer(httpsOptions, app);
 const httpServer = http.createServer(app);
