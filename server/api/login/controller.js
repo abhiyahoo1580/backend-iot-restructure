@@ -47,11 +47,23 @@ const client = new OAuth2Client("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");
 // }
 
 async function login(req) {
-    // console.log("login hitt");
+    console.log("Login request received for:", req.body.email_id);
+    console.log("Database:", mongoose.connection.db.databaseName);
     try {
+        // First, check if user exists at all (without verify check)
+        const userCheck = await loginData.findOne({ email_id: req.body.email_id.toLowerCase() }).lean();
+        console.log("User lookup result:", userCheck ? {
+            exists: true,
+            email: userCheck.email_id,
+            isDelete: userCheck.isDelete,
+            verify: userCheck.verify,
+            hasPassword: !!userCheck.password
+        } : "User not found in database");
+
         const user = await loginData.findOne({ $and: [{ email_id: req.body.email_id.toLowerCase(), isDelete: false, verify: true }] }).lean();
 
         if (!user || !user.password) {
+            console.log("Login failed - User not found or not verified:", req.body.email_id);
             return {
                 msg: 'User does not exist',
                 data: { success: false }
@@ -60,12 +72,14 @@ async function login(req) {
 
         const valid = await bcrypt.compare(req.body.password, user.password);
         if (!valid) {
+            console.log("Invalid password for user:", req.body.email_id);
             return {
                 msg: 'Invalid  password',
                 data: { success: false }
             }
         }
 
+        console.log("Login successful for user:", user.email_id, "userId:", user._id);
         const company = await mongoose.models.companie.findOne({ CompanyId: user.company_id }).lean();
         const payload = {
             emailId: user.email_id,
